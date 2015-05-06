@@ -70,7 +70,7 @@ public class Insert {
 		System.out.println(response.getFields());
 	}
 
-	@Ignore
+	@Test
 	public void testIndex() throws IOException {
 		int randomIndex = (int) (Math.random() * 100);
 
