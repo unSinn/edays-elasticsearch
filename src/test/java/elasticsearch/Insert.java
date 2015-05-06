@@ -51,7 +51,7 @@ public class Insert {
 	}
 
 	@Test
-	public void tetsSearch() {
+	public void testSearch() {
 		SearchResponse response = client.prepareSearch("twitter")
 				.setTypes("tweet")
 				.setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
@@ -62,7 +62,7 @@ public class Insert {
 	}
 
 	@Test
-	public void tetsGet() {
+	public void testGet() {
 		GetResponse response = client.prepareGet("twitter", "tweet", "31")
 				.execute().actionGet();
 
