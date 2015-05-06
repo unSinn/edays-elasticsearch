@@ -1,18 +1,20 @@
 package elasticsearch;
 
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+import static org.elasticsearch.index.query.QueryBuilders.fuzzyLikeThisFieldQuery;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
+import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.index.query.FilterBuilders;
-import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -41,6 +43,7 @@ public class Insert {
 	}
 
 	private Client getClient() {
+		@SuppressWarnings("resource")
 		Client client = new TransportClient().addTransportAddress(
 				new InetSocketTransportAddress("localhost", 9300))
 				.addTransportAddress(
@@ -51,18 +54,52 @@ public class Insert {
 	}
 
 	@Test
-	public void tetsSearch() {
+	public void testFuzzyBad() throws ElasticsearchException, IOException,
+			InterruptedException, ExecutionException {
+		// client.prepareSearchScroll("twitter").
+		QueryBuilder qb = fuzzyLikeThisFieldQuery("message").likeText(
+				"I do something totally different");
+		// Index the query = register it in the percolator
+
 		SearchResponse response = client.prepareSearch("twitter")
-				.setTypes("tweet")
-				.setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-				.setQuery(QueryBuilders.termQuery("multi", "test"))
-				// Query
-				.setPostFilter(FilterBuilders.rangeFilter("ID").from(1).to(32)) // Filter
-				.setFrom(0).setSize(60).setExplain(true).execute().actionGet();
+				.setTypes("tweet").setSearchType(SearchType.QUERY_AND_FETCH)
+				.setQuery(qb).setFrom(0).setSize(60).setExplain(true).execute()
+				.get();
+
+		System.out.println(response);
 	}
 
 	@Test
-	public void tetsGet() {
+	public void testFuzzy() throws ElasticsearchException, IOException,
+			InterruptedException, ExecutionException {
+		// client.prepareSearchScroll("twitter").
+		QueryBuilder qb = fuzzyLikeThisFieldQuery("message").likeText(
+				"tring out Elasticsearch");
+		// Index the query = register it in the percolator
+
+		SearchResponse response = client.prepareSearch("twitter")
+				.setTypes("tweet").setSearchType(SearchType.QUERY_AND_FETCH)
+				.setQuery(qb).setFrom(0).setSize(60).setExplain(true).execute()
+				.get();
+
+		System.out.println(response);
+	}
+
+	@Test
+	public void testSearch() {
+		SearchResponse response = client.prepareSearch("twitter")
+				.setTypes("tweet").setSearchType(SearchType.QUERY_AND_FETCH)
+				// .setQuery(QueryBuilders.termQuery("multi", "test"))
+				// Query
+				// .setPostFilter(FilterBuilders.rangeFilter("ID").from(1).to(32))
+				// // Filter
+				.setFrom(0).setSize(60).setExplain(true).execute().actionGet();
+
+		System.out.println(response);
+	}
+
+	@Test
+	public void testGet() {
 		GetResponse response = client.prepareGet("twitter", "tweet", "31")
 				.execute().actionGet();
 
